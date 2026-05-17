@@ -15,9 +15,10 @@ def upload_file():
     if file.filename == "":
         return jsonify({"error": "No selected file"}), 400
 
-    if file and file.filename.endswith(".txt"):
+    allowed_extensions = (".json", ".txt")
+    if file and file.filename.endswith(allowed_extensions):
         save_path = os.path.join("uploads", file.filename)
         file.save(save_path)
         return jsonify({"message": "File uploaded successfully", "path": save_path}), 200
 
-    return jsonify({"error": "Invalid file type"}), 400
+    return jsonify({"error": "Invalid file type. Only .json and .txt files are accepted."}), 400

@@ -345,7 +345,7 @@ const PreferenceForm = ({ onSubmit, onTimelineData }) => {
         console.error('Upload failed due to network error');
       });
 
-      xhr.open('POST', 'http://192.168.0.118:3000/api/upload');
+      xhr.open('POST', `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/upload`);
       xhr.send(formData);
     } catch (error) {
       setUploadStatus('error');

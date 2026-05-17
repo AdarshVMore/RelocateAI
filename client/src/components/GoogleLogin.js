@@ -11,7 +11,7 @@ const GoogleLogin = () => {
       const idToken = await result.user.getIdToken(); // Firebase token
 
       // Send token to Flask backend
-      const response = await fetch("http://192.168.0.118:3000/verify-token", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/verify-token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),

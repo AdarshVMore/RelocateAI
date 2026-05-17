@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import PlaceCard from '../components/PlaceCard';
 import MapView from '../components/MapView';
 import { AuthContext } from '../context/AuthContext';
@@ -39,19 +39,13 @@ const PlaceRecommender = () => {
     }
   }, []);
 
-  useEffect(() => {
-    if (location) {
-      fetchPlaces();
-    }
-  }, [location, filters, fetchPlaces]);
-
-  const fetchPlaces = async () => {
+  const fetchPlaces = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
       // API call to backend
-      const response = await fetch('http://192.168.0.118:3000/places/recommendations', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/places/recommendations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,11 +81,17 @@ const PlaceRecommender = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [location, filters, user]);
 
-  // Mock data for development
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development' && location) {
+    if (location) {
+      fetchPlaces();
+    }
+  }, [location, filters, fetchPlaces]);
+
+  // Mock data for development — only runs when backend is unreachable
+  useEffect(() => {
+    if (process.env.REACT_APP_USE_MOCK === 'true' && location) {
       // Simulate API response with mock data
       setTimeout(() => {
         const mockPlaces = [

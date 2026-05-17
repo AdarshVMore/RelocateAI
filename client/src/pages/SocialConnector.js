@@ -18,52 +18,12 @@ const SocialConnector = () => {
   const [location, setLocation] = useState(null);
   const [interests, setInterests] = useState([]);
 
-  useEffect(() => {
-    // Get user's current location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          // Default to San Francisco if location access is denied
-          setLocation({ lat: 37.7749, lng: -122.4194 });
-        }
-      );
-    } else {
-      // Default to San Francisco if geolocation is not supported
-      setLocation({ lat: 37.7749, lng: -122.4194 });
-    }
-
-    // Fetch user interests if logged in
-    if (user) {
-      fetchUserInterests();
-    }
-  }, [user, fetchUserInterests]);
-
-  useEffect(() => {
-    if (location) {
-      fetchSocialGroups();
-    }
-  }, [location, filters, fetchSocialGroups]);
-
   const fetchUserInterests = useCallback(async () => {
     try {
-      // API call to backend
-      const response = await fetch('http://192.168.0.118:3000/user/interests', {
-        headers: {
-          'Authorization': `Bearer ${user.token}`
-        }
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/user/interests`, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch user interests');
-      }
-
+      if (!response.ok) throw new Error('Failed to fetch user interests');
       const data = await response.json();
       setInterests(data.interests);
     } catch (err) {
@@ -76,27 +36,20 @@ const SocialConnector = () => {
       setLoading(true);
       setError(null);
 
-      // API call to backend
-      const response = await fetch('http://192.168.0.118:3000/social/groups', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/social/groups`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': user ? `Bearer ${user.token}` : ''
         },
-        body: JSON.stringify({
-          location,
-          ...filters
-        }),
+        body: JSON.stringify({ location, ...filters }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch social groups');
-      }
+      if (!response.ok) throw new Error('Failed to fetch social groups');
 
       const data = await response.json();
       setGroups(data.groups);
-      
-      // Format data for map
+
       const locations = data.groups
         .filter(group => group.latitude && group.longitude)
         .map(group => ({
@@ -106,9 +59,7 @@ const SocialConnector = () => {
           latitude: group.latitude,
           longitude: group.longitude
         }));
-      
       setMapLocations(locations);
-      
     } catch (err) {
       console.error('Error fetching social groups:', err);
       setError('Failed to fetch social groups. Please try again.');
@@ -117,9 +68,34 @@ const SocialConnector = () => {
     }
   }, [location, filters, user]);
 
-  // Mock data for development
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development' && location) {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
+        },
+        () => {
+          setLocation({ lat: 12.9716, lng: 77.5946 }); // Default: Bangalore
+        }
+      );
+    } else {
+      setLocation({ lat: 12.9716, lng: 77.5946 });
+    }
+
+    if (user) {
+      fetchUserInterests();
+    }
+  }, [user, fetchUserInterests]);
+
+  useEffect(() => {
+    if (location) {
+      fetchSocialGroups();
+    }
+  }, [location, filters, fetchSocialGroups]);
+
+  // Mock data for development — only runs when backend is unreachable
+  useEffect(() => {
+    if (process.env.REACT_APP_USE_MOCK === 'true' && location) {
       // Simulate API response with mock data
       setTimeout(() => {
         const mockGroups = [

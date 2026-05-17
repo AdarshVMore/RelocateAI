@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://192.168.0.118:3000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 // Helper function to handle API responses
 const handleResponse = async (response) => {
@@ -27,7 +27,7 @@ const api = {
   // Auth endpoints
   auth: {
     verifyToken: (idToken) => {
-      return fetch(`${API_BASE_URL}/auth/verify`, {
+      return fetch(`${API_BASE_URL}/api/auth/verify-token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken }),

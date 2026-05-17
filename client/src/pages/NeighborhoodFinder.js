@@ -4,6 +4,21 @@ import NeighborhoodCard from '../components/NeighborhoodCard';
 import MapView from '../components/MapView';
 import '../styles/pages/NeighborhoodFinder.css';
 
+const CATEGORY_PRICE_RANGES = {
+  budget: { min: 10000, max: 20000 },
+  moderate: { min: 20000, max: 40000 },
+  comfort: { min: 40000, max: 60000 },
+  premium: { min: 60000, max: 80000 },
+  luxury: { min: 80000, max: 150000 }
+};
+
+const TRAVEL_MODE_SPEEDS = {
+  walking: 5,
+  bicycling: 15,
+  transit: 25,
+  driving: 40
+};
+
 const NeighborhoodFinder = () => {
   const [preferences, setPreferences] = useState(null);
   const [neighborhoods, setNeighborhoods] = useState([]);
@@ -12,23 +27,6 @@ const NeighborhoodFinder = () => {
   const [mapLocations, setMapLocations] = useState([]);
   const [timelineData, setTimelineData] = useState(null);
 
-  // Price ranges for each user category in INR
-  const categoryPriceRanges = {
-    budget: { min: 10000, max: 20000 },
-    moderate: { min: 20000, max: 40000 },
-    comfort: { min: 40000, max: 60000 },
-    premium: { min: 60000, max: 80000 },
-    luxury: { min: 80000, max: 150000 }
-  };
-
-  // Travel mode speeds in km/h (approximate)
-  const travelModeSpeeds = {
-    walking: 5,
-    bicycling: 15,
-    transit: 25,
-    driving: 40
-  };
-
   const fetchNeighborhoods = useCallback(async () => {
     try {
       setLoading(true);
@@ -36,11 +34,11 @@ const NeighborhoodFinder = () => {
 
       // Convert user category to budget range
       const userCategory = preferences.userCategory;
-      const budgetRange = categoryPriceRanges[userCategory];
+      const budgetRange = CATEGORY_PRICE_RANGES[userCategory];
 
       // Calculate approximate commute time based on distance and travel mode
       const { maxCommuteDistance, travelMode } = preferences.commute;
-      const speedKmh = travelModeSpeeds[travelMode] || travelModeSpeeds.driving;
+      const speedKmh = TRAVEL_MODE_SPEEDS[travelMode] || TRAVEL_MODE_SPEEDS.driving;
       const approximateCommuteTime = Math.round((maxCommuteDistance / speedKmh) * 60); // in minutes
 
       // Prepare data for API call
@@ -55,7 +53,7 @@ const NeighborhoodFinder = () => {
       };
 
       // API call to backend
-      const response = await fetch('http://192.168.0.118:3000/neighborhoods/search', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/neighborhoods/search`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,9 +103,9 @@ const NeighborhoodFinder = () => {
     setTimelineData(data);
   };
 
-  // Mock data for development
+  // Mock data for development — only runs when backend is unreachable
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development' && preferences) {
+    if (process.env.REACT_APP_USE_MOCK === 'true' && preferences) {
       // Simulate API response with mock data
       setTimeout(() => {
         const mockNeighborhoods = [

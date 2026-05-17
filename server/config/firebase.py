@@ -1,16 +1,21 @@
 import firebase_admin
 from firebase_admin import credentials, auth
+import os
 
-# Load Firebase credentials
-cred = credentials.Certificate("codebits3-firebase-adminsdk-fbsvc-d00982fcf5.json")
-firebase_admin.initialize_app(cred)
+_initialized = False
+
+def _init():
+    global _initialized
+    if _initialized:
+        return
+    key_path = os.environ.get("FIREBASE_SERVICE_ACCOUNT_PATH", "serviceAccountKey.json")
+    cred = credentials.Certificate(key_path)
+    firebase_admin.initialize_app(cred)
+    _initialized = True
 
 def verify_firebase_token(id_token):
-    """
-    Verify Firebase ID Token and return user data.
-    """
+    _init()
     try:
-        decoded_token = auth.verify_id_token(id_token)
-        return decoded_token  # Returns user info like uid, email, name, etc.
-    except Exception as e:
+        return auth.verify_id_token(id_token)
+    except Exception:
         return None
